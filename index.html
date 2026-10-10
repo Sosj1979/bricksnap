@@ -1,26 +1,24 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BrickSnap 0.3</title>
+<title>BrickSnap 0.4 – BMW Brick Edition</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#edf2f9;color:#17233b;font:16px Arial,sans-serif}
-header{background:#17233b;color:white;text-align:center;padding:25px}
-h1{margin:0;font-size:34px}
-main{max-width:600px;margin:auto;padding:15px}
-.card{background:white;padding:20px;border-radius:20px;margin-bottom:15px;box-shadow:0 4px 15px #0001}
-h2{font-size:20px}
-select,input,button{font:inherit;padding:12px;border-radius:12px;border:1px solid #ccd5e2}
-select{width:100%;margin:8px 0}
-button{background:#ffd13d;border:0;font-weight:bold}
-#viewer{height:350px;border-radius:16px;overflow:hidden;background:#e5efff;touch-action:none}
+body{margin:0;background:#edf2f8;color:#15233a;font:16px system-ui,-apple-system,sans-serif}
+header{background:#14213c;color:white;text-align:center;padding:22px 12px}
+h1{margin:0;font-size:30px}
+main{max-width:640px;margin:auto;padding:15px}
+.card{background:white;border-radius:19px;padding:18px;margin-bottom:15px;box-shadow:0 3px 14px #17233b12}
+select,button,input{font:inherit;padding:12px;border:1px solid #cbd4e2;border-radius:10px}
+select{width:100%;margin:8px 0 12px}
+button{background:#ffd13d;border:0;font-weight:700}
+#viewer{height:355px;background:#e1ebfa;border-radius:14px;overflow:hidden;touch-action:none}
 #viewer canvas{display:block}
-small{color:#65738b}
-img{max-width:100%;border-radius:12px}
-li{margin:8px 0}
+small,.muted{color:#63718a}
+#preview{display:none;width:100%;margin-top:10px;border-radius:12px}
 </style>
 <script type="importmap">
 {
@@ -34,16 +32,20 @@ li{margin:8px 0}
 <body>
 <header>
 <h1>🧱 BrickSnap</h1>
-<p>Imagine it. Build it.</p>
+<div>Imagine it. Build it. · v0.4</div>
 </header>
 <main>
 <section class="card">
-<h2>✨ Välj ditt bygge</h2>
+<h2>🏎️ BMW Brick Edition</h2>
+<p>Inspirerad av Oscars mörkgrå BMW – en digital Speed Champions-liknande konceptmodell.</p>
+<label for="model">Välj modell</label>
 <select id="model">
-<option value="car">🏎️ Sportbil</option>
+<option value="bmw">🏎️ Oscars BMW</option>
+<option value="car">🚗 Sportbil</option>
 <option value="house">🏠 Hus</option>
 <option value="robot">🤖 Robot</option>
 </select>
+<label for="level">Detaljnivå</label>
 <select id="level">
 <option value="1">Easy</option>
 <option value="2" selected>Medium</option>
@@ -51,21 +53,21 @@ li{margin:8px 0}
 </select>
 </section>
 <section class="card">
-<h2>Din 3D-modell</h2>
-<div id="viewer"></div>
-<p><small>Dra med fingret för att snurra. Nyp för att zooma.</small></p>
+<div id="viewer" aria-label="Roterbar 3D-modell"></div>
+<p><small>Dra för att rotera · Nyp för att zooma</small></p>
 <button id="save">❤️ Spara favorit</button>
+<button id="reset">↺ Återställ vy</button>
 </section>
 <section class="card">
-<h2>🧱 Modellens delar</h2>
+<h2>🧱 Bygginformation</h2>
 <p id="parts"></p>
-<p><small>Detta är en visuell modell, inte ännu en verifierad lista över riktiga LEGO-bitar.</small></p>
+<p class="muted">Detta är en visuell 3D-prototyp. Delarna är ännu inte verifierade LEGO-delar och modellen har ännu inga bygginstruktioner.</p>
 </section>
 <section class="card">
-<h2>📸 Fotografera</h2>
+<h2>📸 Fotoreferens</h2>
 <input type="file" accept="image/*" capture="environment" id="photo">
-<img id="preview" style="display:none;margin-top:12px">
-<p><small>Fotot används som referens. Automatisk modellgenerering kommer senare.</small></p>
+<img id="preview" alt="Valt foto">
+<p><small>Fotot visas bara som referens och omvandlas ännu inte automatiskt.</small></p>
 </section>
 <section class="card">
 <h2>⭐ Mina favoriter</h2>
@@ -78,182 +80,250 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 
 const $=id=>document.getElementById(id);
 const scene=new T.Scene();
-scene.background=new T.Color(0xe5efff);
-const camera=new T.PerspectiveCamera(45,1,.1,100);
-camera.position.set(10,8,12);
+scene.background=new T.Color(0xe1ebfa);
+const camera=new T.PerspectiveCamera(42,1,.1,100);
+camera.position.set(11,8,13);
+
 const renderer=new T.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 $("viewer").appendChild(renderer.domElement);
-scene.add(new T.HemisphereLight(0xffffff,0x899bb2,3));
-const light=new T.DirectionalLight(0xffffff,2);
-light.position.set(5,12,8);
-scene.add(light);
+
+scene.add(new T.HemisphereLight(0xffffff,0x8496ae,2.7));
+const sun=new T.DirectionalLight(0xffffff,2.8);
+sun.position.set(5,12,7);
+scene.add(sun);
+
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;
-controls.target.set(0,2,0);
+controls.target.set(0,1.7,0);
+
 const root=new T.Group();
 scene.add(root);
-const palette={
-red:0xe63a3a,blue:0x3288df,yellow:0xffcf36,
-black:0x222735,white:0xfafafa,glass:0x9fdcf5,
-green:0x47b778,brown:0x99643d,gray:0x929eaf
+let count=0;
+
+const C={
+body:0x42474c,bodylight:0x60676d,
+black:0x1d222a,glass:0x7d9da8,
+silver:0xbfc6cc,light:0xeaf2ed,
+red:0xc63138,blue:0x3d87d3,
+yellow:0xf7ca3a,white:0xfafafa,
+green:0x4db678,brown:0x926642
 };
-let pieces=0;
-function material(color){
-return new T.MeshStandardMaterial({color:palette[color],roughness:.48});
+
+function mat(c,metal=0){
+return new T.MeshStandardMaterial({
+color:C[c],metalness:metal,
+roughness:metal?.34:.55,
+transparent:c==="glass",
+opacity:c==="glass"?.85:1
+});
 }
-function box(x,y,z,w,h,d,c){
-const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),material(c));
-mesh.position.set(x,y,z);
-root.add(mesh);
-pieces++;
-return mesh;
+
+function box(x,y,z,w,h,d,c,metal=0){
+let m=new T.Mesh(new T.BoxGeometry(w,h,d),mat(c,metal));
+m.position.set(x,y,z);
+root.add(m);
+count++;
+return m;
 }
-function cylinder(x,y,z,r,h,c,rotate=false){
-const mesh=new T.Mesh(new T.CylinderGeometry(r,r,h,24),material(c));
-if(rotate)mesh.rotation.z=Math.PI/2;
-mesh.position.set(x,y,z);
-root.add(mesh);
-pieces++;
-return mesh;
+
+function cyl(x,y,z,r,h,c,axis="y"){
+let m=new T.Mesh(
+new T.CylinderGeometry(r,r,h,24),
+mat(c,c==="silver"?.7:0)
+);
+if(axis==="z")m.rotation.x=Math.PI/2;
+if(axis==="x")m.rotation.z=Math.PI/2;
+m.position.set(x,y,z);
+root.add(m);
+count++;
+return m;
 }
+
 function brick(x,y,z,w,d,c){
-box(x,y,z,w,.55,d,c);
-for(let a=0;a<w;a++){
-for(let b=0;b<d;b++){
-cylinder(x-w/2+a+.5,y+.34,z-d/2+b+.5,.29,.13,c);
-}}
+box(x,y,z,w,.5,d,c);
+for(let i=0;i<w;i++){
+for(let j=0;j<d;j++){
+cyl(x-w/2+i+.5,y+.32,z-d/2+j+.5,.27,.12,c);
 }
+}
+}
+
+function wheels(length){
+for(let x of [-length/2+1.65,length/2-1.65]){
+for(let z of [-2.12,2.12]){
+cyl(x,.78,z,.78,.42,"black","z");
+cyl(x,.78,z+(z>0?.23:-.23),.49,.07,"silver","z");
+for(let a=0;a<5;a++){
+let t=a*Math.PI*2/5;
+box(
+x+Math.cos(t)*.27,
+.78+Math.sin(t)*.27,
+z+(z>0?.29:-.29),
+.13,.38,.07,"black"
+);
+}
+}
+}
+}
+
+function bmw(level){
+const length=level===1?8:level===2?10:12;
+
+box(0,1.25,0,length,.58,3.7,"body",.5);
+brick(0,1.66,0,length-2,3,"body");
+box(-.8,2.17,0,4.5,.73,3.1,"glass");
+box(-1,2.68,0,3.5,.28,3.1,"body",.5);
+
+box(length/2-2.1,1.99,0,3.6,.28,3.2,"bodylight",.5);
+box(-length/2+1,1.87,0,1.5,.2,3.1,"bodylight",.5);
+
+wheels(length);
+
+for(const z of [-1.22,1.22]){
+box(length/2+.04,1.53,z,.14,.25,.76,"light");
+box(-length/2-.04,1.56,z,.14,.28,.7,"red");
+}
+
+for(const z of [-.38,.38]){
+box(length/2+.13,1.34,z,.16,.7,.59,"black");
+}
+
+for(const z of [-1.88,1.88]){
+box(-.6,1.82,z,.75,.17,.1,"silver");
+}
+
+if(level>1){
+for(let x of [-1.65,.8]){
+for(let z of [-1.9,1.9]){
+box(x,1.78,z,.12,.45,.09,"black");
+}
+}
+box(-length/2+.15,1.21,0,.15,.23,2.5,"black");
+}
+
+if(level===3){
+box(-length/2+.7,2.03,0,.26,.14,3.7,"black");
+for(const z of [-1.2,1.2]){
+box(length/2-1.1,2.19,z,.75,.1,.12,"silver");
+}
+}
+}
+
 function car(level){
-const L=level===1?5:level===2?7:9;
-brick(0,1.25,0,L,4,"red");
-brick(0,1.85,0,L-1,4,"red");
-brick(-.6,2.45,0,level===1?2:4,4,"glass");
-brick(-.6,3.03,0,level===3?4:2,4,"red");
-for(const x of [-L/2+1.1,L/2-1.1]){
-for(const z of [-2.15,2.15]){
-cylinder(x,.8,z,.68,.38,"black",true);
-cylinder(x,.8,z,.32,.42,"gray",true);
-}}
-for(const z of [-1.3,1.3]){
-box(L/2+.1,1.6,z,.2,.35,.7,"yellow");
-box(-L/2-.1,1.6,z,.2,.3,.7,"red");
+const l=level===1?6:level===2?8:10;
+brick(0,1.3,0,l,4,"red");
+brick(-.5,1.9,0,4,4,"glass");
+brick(-.5,2.5,0,3,4,"red");
+wheels(l);
 }
-if(level>1){
-box(0,2.1,-2.05,2,.2,.15,"black");
-box(0,2.1,2.05,2,.2,.15,"black");
-}
-if(level===3){
-box(-L/2+.5,2.45,0,.3,.2,4.5,"black");
-brick(L/2-1,2.5,0,2,2,"red");
-}
-}
+
 function house(level){
-box(0,.15,0,10,.3,9,"green");
-for(let n=0;n<level+1;n++){
-brick(0,.75+n*.6,0,6,5,"white");
+box(0,.1,0,10,.2,9,"green");
+for(let n=0;n<=level;n++){
+brick(0,.7+n*.55,0,6,5,"white");
 }
-const roof=1+(level+1)*.6;
-brick(0,roof,0,7,6,"red");
-brick(0,roof+.6,0,5,4,"red");
-brick(0,roof+1.2,0,3,2,"red");
-box(0,.95,2.58,1.3,1.4,.14,"brown");
-for(const x of [-2,2]){
-box(x,1.3,2.58,1.1,.9,.15,"glass");
+let y=1.3+level*.55;
+brick(0,y,0,7,6,"red");
+brick(0,y+.6,0,5,4,"red");
+box(0,1,2.6,1.3,1.5,.12,"brown");
+for(let x of [-2,2]){
+box(x,1.3,2.6,1,.9,.13,"glass");
 }
-if(level>1){
-box(-3.7,.9,0,.5,1.5,.5,"brown");
-cylinder(-3.7,1.9,0,1.1,1.2,"green");
-box(2,roof+1.5,-1,.9,1.2,.9,"gray");
 }
-if(level===3){
-for(const z of [-2,0,2]){
-box(3.7,.7,z,.3,1,.3,"brown");
-}}
-}
+
 function robot(level){
-for(let n=0;n<level+1;n++){
-brick(0,1.5+n*.6,0,4,3,n%2?"blue":"red");
+for(let n=0;n<=level;n++){
+brick(0,1.2+n*.55,0,4,3,n%2?"blue":"red");
 }
-const head=1.5+(level+1)*.6;
-brick(0,head,0,3,3,"yellow");
-for(const x of [-.65,.65]){
-box(x,head+.1,1.57,.5,.4,.14,"black");
+let y=1.9+level*.55;
+brick(0,y,0,3,3,"yellow");
+for(let x of [-.7,.7]){
+box(x,y,1.56,.45,.35,.1,"black");
 }
-box(0,head-.45,1.58,1.5,.14,.14,"black");
-for(const x of [-2.7,2.7]){
-box(x,2,0,1.1,2.3,1.1,"blue");
-brick(x,3.2,0,1,1,"red");
+box(0,y-.4,1.56,1.4,.13,.1,"black");
+for(let x of [-2.7,2.7]){
+box(x,1.9,0,1,2.3,1,"blue");
 }
-for(const x of [-1,1]){
-box(x,.6,0,1.2,1.4,1.5,"black");
-brick(x,.2,0,2,2,"gray");
+for(let x of [-1,1]){
+box(x,.45,0,1.1,.9,1.4,"black");
 }
-cylinder(0,head+.8,0,.16,.7,"gray");
-cylinder(0,head+1.2,0,.3,.3,"red");
-if(level>1){
-brick(0,1.8,1.6,2,1,"gray");
 }
-if(level===3){
-for(const x of [-2.7,2.7]){
-brick(x,3.8,0,1,1,"yellow");
-}}
-}
-function build(){
-root.clear();
-pieces=0;
-const type=$("model").value;
-const level=Number($("level").value);
-if(type==="car")car(level);
-if(type==="house")house(level);
-if(type==="robot")robot(level);
-$("parts").textContent=pieces+" visuella komponenter i modellen.";
-controls.target.set(0,2,0);
-camera.position.set(10,8,12);
+
+function reset(){
+camera.position.set(11,8,13);
+controls.target.set(0,1.7,0);
 controls.update();
 }
+
+function build(){
+root.clear();
+count=0;
+let type=$("model").value;
+let level=+$("level").value;
+({bmw,car,house,robot})[type](level);
+$("parts").textContent=
+count+" visuella komponenter (inklusive detaljer och knoppar).";
+reset();
+}
+
+$("reset").onclick=reset;
 $("model").onchange=build;
 $("level").onchange=build;
+
 const key="bricksnap-favorites";
+
 function favorites(){
-let list=[];
-try{list=JSON.parse(localStorage.getItem(key)||"[]")}catch{}
-$("favorites").replaceChildren(...list.map(name=>{
-const li=document.createElement("li");
-li.textContent=name;
+let items=[];
+try{
+items=JSON.parse(localStorage.getItem(key)||"[]");
+}catch{}
+$("favorites").replaceChildren(...items.map(s=>{
+let li=document.createElement("li");
+li.textContent=s;
 return li;
 }));
 }
+
 $("save").onclick=()=>{
-let list=[];
-try{list=JSON.parse(localStorage.getItem(key)||"[]")}catch{}
-list.push($("model").selectedOptions[0].text+" – "+$("level").selectedOptions[0].text);
-localStorage.setItem(key,JSON.stringify(list));
+let items=[];
+try{
+items=JSON.parse(localStorage.getItem(key)||"[]");
+}catch{}
+items.push(
+$("model").selectedOptions[0].text+
+" – "+$("level").selectedOptions[0].text
+);
+localStorage.setItem(key,JSON.stringify(items));
 favorites();
 };
+
 $("photo").onchange=e=>{
-const file=e.target.files[0];
-if(!file)return;
-$("preview").src=URL.createObjectURL(file);
+let f=e.target.files[0];
+if(!f)return;
+$("preview").src=URL.createObjectURL(f);
 $("preview").style.display="block";
 };
+
 function resize(){
-const w=$("viewer").clientWidth;
-const h=$("viewer").clientHeight;
+let w=$("viewer").clientWidth;
+let h=$("viewer").clientHeight;
 camera.aspect=w/h;
 camera.updateProjectionMatrix();
 renderer.setSize(w,h);
 }
+
 window.addEventListener("resize",resize);
 resize();
 build();
 favorites();
-function animate(){
-requestAnimationFrame(animate);
+
+function tick(){
+requestAnimationFrame(tick);
 controls.update();
 renderer.render(scene,camera);
 }
-animate();
+tick();
 </script>
 </body>
 </html>
