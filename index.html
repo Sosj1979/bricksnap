@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BrickSnap 0.4 – BMW Brick Edition</title>
+<title>BrickSnap 0.6 – BMW Curved Edition</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#edf2f8;color:#15233a;font:16px system-ui,-apple-system,sans-serif}
@@ -22,22 +22,22 @@ small,.muted{color:#63718a}
 </style>
 <script type="importmap">
 {
- "imports":{
-  "three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
-  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
- }
+"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+}
 }
 </script>
 </head>
 <body>
 <header>
 <h1>🧱 BrickSnap</h1>
-<div>Imagine it. Build it. · v0.4</div>
+<div>Imagine it. Build it. · v0.6</div>
 </header>
 <main>
 <section class="card">
 <h2>🏎️ BMW Brick Edition</h2>
-<p>Inspirerad av Oscars mörkgrå BMW – en digital Speed Champions-liknande konceptmodell.</p>
+<p>En rundare BMW med skulpterad motorhuv, välvd taklinje, hjulhus och femekrade fälgar.</p>
 <label for="model">Välj modell</label>
 <select id="model">
 <option value="bmw">🏎️ Oscars BMW</option>
@@ -53,7 +53,7 @@ small,.muted{color:#63718a}
 </select>
 </section>
 <section class="card">
-<div id="viewer" aria-label="Roterbar 3D-modell"></div>
+<div id="viewer"></div>
 <p><small>Dra för att rotera · Nyp för att zooma</small></p>
 <button id="save">❤️ Spara favorit</button>
 <button id="reset">↺ Återställ vy</button>
@@ -67,20 +67,23 @@ small,.muted{color:#63718a}
 <h2>📸 Fotoreferens</h2>
 <input type="file" accept="image/*" capture="environment" id="photo">
 <img id="preview" alt="Valt foto">
-<p><small>Fotot visas bara som referens och omvandlas ännu inte automatiskt.</small></p>
+<p><small>Fotot visas som referens och omvandlas ännu inte automatiskt.</small></p>
 </section>
 <section class="card">
 <h2>⭐ Mina favoriter</h2>
 <ul id="favorites"></ul>
 </section>
 </main>
+
 <script type="module">
 import * as T from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {RoundedBoxGeometry} from "three/addons/geometries/RoundedBoxGeometry.js";
 
 const $=id=>document.getElementById(id);
 const scene=new T.Scene();
 scene.background=new T.Color(0xe1ebfa);
+
 const camera=new T.PerspectiveCamera(42,1,.1,100);
 camera.position.set(11,8,13);
 
@@ -102,17 +105,24 @@ scene.add(root);
 let count=0;
 
 const C={
-body:0x42474c,bodylight:0x60676d,
-black:0x1d222a,glass:0x7d9da8,
-silver:0xbfc6cc,light:0xeaf2ed,
-red:0xc63138,blue:0x3d87d3,
-yellow:0xf7ca3a,white:0xfafafa,
-green:0x4db678,brown:0x926642
+body:0x42474c,
+bodylight:0x60676d,
+black:0x1d222a,
+glass:0x7d9da8,
+silver:0xbfc6cc,
+light:0xeaf2ed,
+red:0xc63138,
+blue:0x3d87d3,
+yellow:0xf7ca3a,
+white:0xfafafa,
+green:0x4db678,
+brown:0x926642
 };
 
 function mat(c,metal=0){
 return new T.MeshStandardMaterial({
-color:C[c],metalness:metal,
+color:C[c],
+metalness:metal,
 roughness:metal?.34:.55,
 transparent:c==="glass",
 opacity:c==="glass"?.85:1
@@ -120,7 +130,7 @@ opacity:c==="glass"?.85:1
 }
 
 function box(x,y,z,w,h,d,c,metal=0){
-let m=new T.Mesh(new T.BoxGeometry(w,h,d),mat(c,metal));
+const m=new T.Mesh(new T.BoxGeometry(w,h,d),mat(c,metal));
 m.position.set(x,y,z);
 root.add(m);
 count++;
@@ -128,13 +138,46 @@ return m;
 }
 
 function cyl(x,y,z,r,h,c,axis="y"){
-let m=new T.Mesh(
+const m=new T.Mesh(
 new T.CylinderGeometry(r,r,h,24),
 mat(c,c==="silver"?.7:0)
 );
 if(axis==="z")m.rotation.x=Math.PI/2;
 if(axis==="x")m.rotation.z=Math.PI/2;
 m.position.set(x,y,z);
+root.add(m);
+count++;
+return m;
+}
+
+function rounded(x,y,z,w,h,d,r,c,metal=.2){
+const g=new RoundedBoxGeometry(
+w,h,d,4,
+Math.min(r,w/2-.01,h/2-.01,d/2-.01)
+);
+const m=new T.Mesh(g,mat(c,metal));
+m.position.set(x,y,z);
+root.add(m);
+count++;
+return m;
+}
+
+function panel(points,z,c,metal=.2){
+const shape=new T.Shape();
+shape.moveTo(points[0][0],points[0][1]);
+for(let i=1;i<points.length;i++){
+shape.lineTo(points[i][0],points[i][1]);
+}
+shape.closePath();
+const geo=new T.ExtrudeGeometry(shape,{
+depth:.09,
+bevelEnabled:true,
+bevelThickness:.045,
+bevelSize:.045,
+bevelSegments:3
+});
+const m=new T.Mesh(geo,mat(c,metal));
+m.position.z=z;
 root.add(m);
 count++;
 return m;
@@ -150,62 +193,150 @@ cyl(x-w/2+i+.5,y+.32,z-d/2+j+.5,.27,.12,c);
 }
 
 function wheels(length){
-for(let x of [-length/2+1.65,length/2-1.65]){
-for(let z of [-2.12,2.12]){
+for(const x of [-length/2+1.65,length/2-1.65]){
+for(const z of [-2.12,2.12]){
 cyl(x,.78,z,.78,.42,"black","z");
 cyl(x,.78,z+(z>0?.23:-.23),.49,.07,"silver","z");
-for(let a=0;a<5;a++){
-let t=a*Math.PI*2/5;
-box(
-x+Math.cos(t)*.27,
-.78+Math.sin(t)*.27,
-z+(z>0?.29:-.29),
-.13,.38,.07,"black"
-);
-}
 }
 }
 }
 
 function bmw(level){
-const length=level===1?8:level===2?10:12;
+// +X är bilens front.
+const L=11.2;
 
-box(0,1.25,0,length,.58,3.7,"body",.5);
-brick(0,1.66,0,length-2,3,"body");
-box(-.8,2.17,0,4.5,.73,3.1,"glass");
-box(-1,2.68,0,3.5,.28,3.1,"body",.5);
+// Rundad, låg kaross.
+rounded(0,1.12,0,L,.86,3.55,.32,"body",.52);
+rounded(2.9,1.52,0,4.95,.48,3.42,.20,"body",.54);
+rounded(-3.86,1.52,0,3.18,.50,3.42,.22,"body",.54);
 
-box(length/2-2.1,1.99,0,3.6,.28,3.2,"bodylight",.5);
-box(-length/2+1,1.87,0,1.5,.2,3.1,"bodylight",.5);
+// Lång motorhuv och bakparti.
+const hood=rounded(3.22,1.76,0,4.25,.21,3.28,.10,"bodylight",.55);
+hood.rotation.z=-.028;
+rounded(5.44,1.23,0,.38,.57,3.26,.17,"body",.5);
+rounded(-5.36,1.36,0,.30,.51,3.29,.14,"body",.5);
 
-wheels(length);
+// Rundat tak.
+rounded(-1.15,2.51,0,4.55,.28,2.93,.13,"body",.52);
 
-for(const z of [-1.22,1.22]){
-box(length/2+.04,1.53,z,.14,.25,.76,"light");
-box(-length/2-.04,1.56,z,.14,.28,.7,"red");
+// Sluttande framruta och bakruta.
+const frontPane=rounded(1.15,2.13,0,.13,.71,2.84,.045,"glass");
+frontPane.rotation.z=.50;
+const rearPane=rounded(-3.80,2.12,0,.12,.65,2.82,.045,"glass");
+rearPane.rotation.z=-.67;
+
+for(const side of [-1,1]){
+const z=side*1.53;
+
+// Sidofönster.
+panel([
+[-3.39,2.35],[-2.55,2.48],
+[-2.53,1.96],[-3.98,1.94]
+],side>0?z:z-.10,"glass");
+
+panel([
+[-2.44,2.48],[-.55,2.48],
+[-.58,1.95],[-2.44,1.95]
+],side>0?z:z-.10,"glass");
+
+panel([
+[-.43,2.46],[.60,2.43],
+[1.48,1.94],[-.45,1.94]
+],side>0?z:z-.10,"glass");
+
+// Fönsterstolpar.
+for(const x of [-2.49,-.49]){
+rounded(x,2.21,side*1.61,.075,.61,.09,.025,"black");
 }
 
-for(const z of [-.38,.38]){
-box(length/2+.13,1.34,z,.16,.7,.59,"black");
+// Dörrar, handtag och sidokjolar.
+rounded(-.95,1.34,side*1.73,5.4,.48,.13,.055,"body",.42);
+
+for(const x of [-2.43,.02]){
+rounded(x,1.42,side*1.82,.035,.57,.035,.012,"black");
 }
 
-for(const z of [-1.88,1.88]){
-box(-.6,1.82,z,.75,.17,.1,"silver");
+for(const x of [-2.85,-.32]){
+rounded(x,1.72,side*1.83,.47,.065,.065,.023,"silver",.75);
 }
 
-if(level>1){
-for(let x of [-1.65,.8]){
-for(let z of [-1.9,1.9]){
-box(x,1.78,z,.12,.45,.09,"black");
+rounded(-.6,.88,side*1.75,6.5,.17,.12,.05,"black");
+
+// Sidospeglar.
+rounded(1.30,2.00,side*1.90,.56,.23,.34,.11,"body",.5);
+rounded(1.25,2.06,side*2.08,.42,.06,.07,.02,"silver",.8);
+}
+
+// Stora sporthjul med fem ekrar.
+for(const x of [-3.55,3.15]){
+for(const side of [-1,1]){
+const z=side*1.91;
+
+cyl(x,.80,z,.85,.50,"black","z");
+cyl(x,.80,z+side*.27,.64,.09,"silver","z");
+cyl(x,.80,z+side*.33,.53,.10,"black","z");
+
+for(let i=0;i<5;i++){
+const angle=i*Math.PI*2/5;
+const spoke=rounded(
+x+Math.cos(angle)*.32,
+.80+Math.sin(angle)*.32,
+z+side*.405,
+.16,.53,.055,.025,
+"silver",.78
+);
+spoke.rotation.z=angle-Math.PI/2;
+}
+
+cyl(x,.80,z+side*.43,.13,.07,"silver","z");
+
+// Rundade hjulhus.
+for(let k=0;k<=10;k++){
+const t=Math.PI*.12+k*Math.PI*.76/10;
+rounded(
+x+.98*Math.cos(t),
+.80+.98*Math.sin(t),
+side*1.82,
+.20,.11,.10,.04,
+"bodylight",.52
+);
 }
 }
-box(-length/2+.15,1.21,0,.15,.23,2.5,"black");
+}
+
+// BMW-inspirerad dubbel grill.
+for(const z of [-.45,.45]){
+rounded(5.66,1.42,z,.13,.53,.70,.11,"silver",.8);
+rounded(5.75,1.42,z,.08,.42,.57,.09,"black");
+
+for(let k=-1;k<=1;k++){
+rounded(5.81,1.42,z+k*.15,.035,.35,.034,.012,"silver",.7);
+}
+}
+
+// Frontspoiler.
+rounded(5.60,1.01,0,.16,.19,2.62,.07,"black");
+
+// Smala strålkastare och bakljus.
+for(const z of [-1.31,1.31]){
+rounded(5.55,1.72,z,.13,.18,.72,.07,"light");
+rounded(5.61,1.64,z,.08,.04,.63,.018,"silver");
+rounded(-5.53,1.54,z,.13,.20,.70,.065,"red");
+}
+
+if(level>=2){
+rounded(-5.52,1.03,0,.12,.22,2.65,.06,"black");
+
+for(const side of [-1,1]){
+rounded(3.13,1.88,side*1.40,3.35,.045,.035,.015,"silver",.65);
+}
 }
 
 if(level===3){
-box(-length/2+.7,2.03,0,.26,.14,3.7,"black");
-for(const z of [-1.2,1.2]){
-box(length/2-1.1,2.19,z,.75,.1,.12,"silver");
+for(const side of [-1,1]){
+rounded(4.25,1.89,side*1.22,1.30,.035,.045,.012,"body",.7);
+rounded(-5.55,1.74,side*1.21,.06,.04,.58,.014,"silver",.7);
+rounded(-.7,.92,side*1.85,4.8,.045,.035,.012,"silver",.65);
 }
 }
 }
@@ -223,11 +354,11 @@ box(0,.1,0,10,.2,9,"green");
 for(let n=0;n<=level;n++){
 brick(0,.7+n*.55,0,6,5,"white");
 }
-let y=1.3+level*.55;
+const y=1.3+level*.55;
 brick(0,y,0,7,6,"red");
 brick(0,y+.6,0,5,4,"red");
 box(0,1,2.6,1.3,1.5,.12,"brown");
-for(let x of [-2,2]){
+for(const x of [-2,2]){
 box(x,1.3,2.6,1,.9,.13,"glass");
 }
 }
@@ -236,16 +367,16 @@ function robot(level){
 for(let n=0;n<=level;n++){
 brick(0,1.2+n*.55,0,4,3,n%2?"blue":"red");
 }
-let y=1.9+level*.55;
+const y=1.9+level*.55;
 brick(0,y,0,3,3,"yellow");
-for(let x of [-.7,.7]){
+for(const x of [-.7,.7]){
 box(x,y,1.56,.45,.35,.1,"black");
 }
 box(0,y-.4,1.56,1.4,.13,.1,"black");
-for(let x of [-2.7,2.7]){
+for(const x of [-2.7,2.7]){
 box(x,1.9,0,1,2.3,1,"blue");
 }
-for(let x of [-1,1]){
+for(const x of [-1,1]){
 box(x,.45,0,1.1,.9,1.4,"black");
 }
 }
@@ -259,8 +390,8 @@ controls.update();
 function build(){
 root.clear();
 count=0;
-let type=$("model").value;
-let level=+$("level").value;
+const type=$("model").value;
+const level=Number($("level").value);
 ({bmw,car,house,robot})[type](level);
 $("parts").textContent=
 count+" visuella komponenter (inklusive detaljer och knoppar).";
@@ -279,7 +410,7 @@ try{
 items=JSON.parse(localStorage.getItem(key)||"[]");
 }catch{}
 $("favorites").replaceChildren(...items.map(s=>{
-let li=document.createElement("li");
+const li=document.createElement("li");
 li.textContent=s;
 return li;
 }));
@@ -299,15 +430,15 @@ favorites();
 };
 
 $("photo").onchange=e=>{
-let f=e.target.files[0];
+const f=e.target.files[0];
 if(!f)return;
 $("preview").src=URL.createObjectURL(f);
 $("preview").style.display="block";
 };
 
 function resize(){
-let w=$("viewer").clientWidth;
-let h=$("viewer").clientHeight;
+const w=$("viewer").clientWidth;
+const h=$("viewer").clientHeight;
 camera.aspect=w/h;
 camera.updateProjectionMatrix();
 renderer.setSize(w,h);
