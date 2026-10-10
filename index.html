@@ -3,22 +3,33 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BrickSnap</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BrickSnap 0.3</title>
 <style>
-body{margin:0;background:#f3f5fa;font-family:Arial,sans-serif;color:#17213a}
-header{background:#17213a;color:white;padding:24px;text-align:center}
-h1{margin:0;font-size:32px}
-main{max-width:550px;margin:auto;padding:18px}
-.card{background:white;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 3px 12px #0001}
-button,select,input{font-size:16px;padding:12px;border-radius:10px;border:1px solid #ccd2dc}
-button{background:#ffcf37;border:0;font-weight:bold;cursor:pointer}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-#viewer{width:100%;height:290px;touch-action:none;background:#e7edf7;border-radius:14px}
-label{display:block;margin:12px 0 6px;font-weight:bold}
-li{padding:5px}
-small{color:#64748b}
+*{box-sizing:border-box}
+body{margin:0;background:#edf2f9;color:#17233b;font:16px Arial,sans-serif}
+header{background:#17233b;color:white;text-align:center;padding:25px}
+h1{margin:0;font-size:34px}
+main{max-width:600px;margin:auto;padding:15px}
+.card{background:white;padding:20px;border-radius:20px;margin-bottom:15px;box-shadow:0 4px 15px #0001}
+h2{font-size:20px}
+select,input,button{font:inherit;padding:12px;border-radius:12px;border:1px solid #ccd5e2}
+select{width:100%;margin:8px 0}
+button{background:#ffd13d;border:0;font-weight:bold}
+#viewer{height:350px;border-radius:16px;overflow:hidden;background:#e5efff;touch-action:none}
+#viewer canvas{display:block}
+small{color:#65738b}
+img{max-width:100%;border-radius:12px}
+li{margin:8px 0}
 </style>
+<script type="importmap">
+{
+ "imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+ }
+}
+</script>
 </head>
 <body>
 <header>
@@ -26,134 +37,222 @@ small{color:#64748b}
 <p>Imagine it. Build it.</p>
 </header>
 <main>
-<div class="card">
-<h2>1. Välj ditt bygge</h2>
-<label>Modell</label>
+<section class="card">
+<h2>✨ Välj ditt bygge</h2>
 <select id="model">
-<option value="car">🚗 Bil</option>
+<option value="car">🏎️ Sportbil</option>
 <option value="house">🏠 Hus</option>
 <option value="robot">🤖 Robot</option>
 </select>
-<label>Svårighetsgrad</label>
 <select id="level">
 <option value="1">Easy</option>
-<option value="2">Medium</option>
+<option value="2" selected>Medium</option>
 <option value="3">Expert</option>
 </select>
-</div>
-<div class="card">
-<h2>2. Din 3D-modell</h2>
+</section>
+<section class="card">
+<h2>Din 3D-modell</h2>
 <div id="viewer"></div>
 <p><small>Dra med fingret för att snurra. Nyp för att zooma.</small></p>
 <button id="save">❤️ Spara favorit</button>
-</div>
-<div class="card">
-<h2>3. Dina byggbitar</h2>
-<ul id="parts"></ul>
-<label>Hur många bitar har du hemma?</label>
-<input id="owned" type="number" min="0" value="0">
-<p id="missing"></p>
-</div>
-<div class="card">
-<h2>4. Fotografera ditt föremål</h2>
+</section>
+<section class="card">
+<h2>🧱 Modellens delar</h2>
+<p id="parts"></p>
+<p><small>Detta är en visuell modell, inte ännu en verifierad lista över riktiga LEGO-bitar.</small></p>
+</section>
+<section class="card">
+<h2>📸 Fotografera</h2>
 <input type="file" accept="image/*" capture="environment" id="photo">
-<img id="preview" style="width:100%;margin-top:12px;border-radius:12px;display:none">
-<p><small>Fotot visas som referens. Automatisk omvandling kommer i en senare version.</small></p>
-</div>
-<div class="card">
+<img id="preview" style="display:none;margin-top:12px">
+<p><small>Fotot används som referens. Automatisk modellgenerering kommer senare.</small></p>
+</section>
+<section class="card">
 <h2>⭐ Mina favoriter</h2>
 <ul id="favorites"></ul>
-</div>
+</section>
 </main>
 <script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js";
-import {OrbitControls} from "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js";
-</script>
-<script type="module">
-import * as THREE from "https://esm.sh/three@0.160.1";
-import {OrbitControls} from "https://esm.sh/three@0.160.1/examples/jsm/controls/OrbitControls.js";
-const viewer=document.querySelector("#viewer");
-const scene=new THREE.Scene();
-scene.background=new THREE.Color("#e7edf7");
-const camera=new THREE.PerspectiveCamera(45,1,.1,100);
-camera.position.set(8,7,10);
-const renderer=new THREE.WebGLRenderer({antialias:true});
+import * as T from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+
+const $=id=>document.getElementById(id);
+const scene=new T.Scene();
+scene.background=new T.Color(0xe5efff);
+const camera=new T.PerspectiveCamera(45,1,.1,100);
+camera.position.set(10,8,12);
+const renderer=new T.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-viewer.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xffffff,0x777777,2.5));
-const light=new THREE.DirectionalLight(0xffffff,2);
-light.position.set(5,10,7);scene.add(light);
+$("viewer").appendChild(renderer.domElement);
+scene.add(new T.HemisphereLight(0xffffff,0x899bb2,3));
+const light=new T.DirectionalLight(0xffffff,2);
+light.position.set(5,12,8);
+scene.add(light);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;
-const group=new THREE.Group();scene.add(group);
-const colors={red:0xe43e38,blue:0x277bd1,yellow:0xf4c438,black:0x252c39,white:0xfafafa};
-let count=0;
-function brick(x,y,z,w,d,color){
-const material=new THREE.MeshStandardMaterial({color:colors[color]});
-const box=new THREE.Mesh(new THREE.BoxGeometry(w,.8,d),material);
-box.position.set(x,y,z);group.add(box);
-for(let i=0;i<w;i++)for(let j=0;j<d;j++){
-const stud=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.16,16),material);
-stud.position.set(x-w/2+i+.5,y+.47,z-d/2+j+.5);
-group.add(stud);
+controls.target.set(0,2,0);
+const root=new T.Group();
+scene.add(root);
+const palette={
+red:0xe63a3a,blue:0x3288df,yellow:0xffcf36,
+black:0x222735,white:0xfafafa,glass:0x9fdcf5,
+green:0x47b778,brown:0x99643d,gray:0x929eaf
+};
+let pieces=0;
+function material(color){
+return new T.MeshStandardMaterial({color:palette[color],roughness:.48});
 }
-count++;
+function box(x,y,z,w,h,d,c){
+const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),material(c));
+mesh.position.set(x,y,z);
+root.add(mesh);
+pieces++;
+return mesh;
+}
+function cylinder(x,y,z,r,h,c,rotate=false){
+const mesh=new T.Mesh(new T.CylinderGeometry(r,r,h,24),material(c));
+if(rotate)mesh.rotation.z=Math.PI/2;
+mesh.position.set(x,y,z);
+root.add(mesh);
+pieces++;
+return mesh;
+}
+function brick(x,y,z,w,d,c){
+box(x,y,z,w,.55,d,c);
+for(let a=0;a<w;a++){
+for(let b=0;b<d;b++){
+cylinder(x-w/2+a+.5,y+.34,z-d/2+b+.5,.29,.13,c);
+}}
+}
+function car(level){
+const L=level===1?5:level===2?7:9;
+brick(0,1.25,0,L,4,"red");
+brick(0,1.85,0,L-1,4,"red");
+brick(-.6,2.45,0,level===1?2:4,4,"glass");
+brick(-.6,3.03,0,level===3?4:2,4,"red");
+for(const x of [-L/2+1.1,L/2-1.1]){
+for(const z of [-2.15,2.15]){
+cylinder(x,.8,z,.68,.38,"black",true);
+cylinder(x,.8,z,.32,.42,"gray",true);
+}}
+for(const z of [-1.3,1.3]){
+box(L/2+.1,1.6,z,.2,.35,.7,"yellow");
+box(-L/2-.1,1.6,z,.2,.3,.7,"red");
+}
+if(level>1){
+box(0,2.1,-2.05,2,.2,.15,"black");
+box(0,2.1,2.05,2,.2,.15,"black");
+}
+if(level===3){
+box(-L/2+.5,2.45,0,.3,.2,4.5,"black");
+brick(L/2-1,2.5,0,2,2,"red");
+}
+}
+function house(level){
+box(0,.15,0,10,.3,9,"green");
+for(let n=0;n<level+1;n++){
+brick(0,.75+n*.6,0,6,5,"white");
+}
+const roof=1+(level+1)*.6;
+brick(0,roof,0,7,6,"red");
+brick(0,roof+.6,0,5,4,"red");
+brick(0,roof+1.2,0,3,2,"red");
+box(0,.95,2.58,1.3,1.4,.14,"brown");
+for(const x of [-2,2]){
+box(x,1.3,2.58,1.1,.9,.15,"glass");
+}
+if(level>1){
+box(-3.7,.9,0,.5,1.5,.5,"brown");
+cylinder(-3.7,1.9,0,1.1,1.2,"green");
+box(2,roof+1.5,-1,.9,1.2,.9,"gray");
+}
+if(level===3){
+for(const z of [-2,0,2]){
+box(3.7,.7,z,.3,1,.3,"brown");
+}}
+}
+function robot(level){
+for(let n=0;n<level+1;n++){
+brick(0,1.5+n*.6,0,4,3,n%2?"blue":"red");
+}
+const head=1.5+(level+1)*.6;
+brick(0,head,0,3,3,"yellow");
+for(const x of [-.65,.65]){
+box(x,head+.1,1.57,.5,.4,.14,"black");
+}
+box(0,head-.45,1.58,1.5,.14,.14,"black");
+for(const x of [-2.7,2.7]){
+box(x,2,0,1.1,2.3,1.1,"blue");
+brick(x,3.2,0,1,1,"red");
+}
+for(const x of [-1,1]){
+box(x,.6,0,1.2,1.4,1.5,"black");
+brick(x,.2,0,2,2,"gray");
+}
+cylinder(0,head+.8,0,.16,.7,"gray");
+cylinder(0,head+1.2,0,.3,.3,"red");
+if(level>1){
+brick(0,1.8,1.6,2,1,"gray");
+}
+if(level===3){
+for(const x of [-2.7,2.7]){
+brick(x,3.8,0,1,1,"yellow");
+}}
 }
 function build(){
-group.clear();count=0;
-const type=document.querySelector("#model").value;
-const level=+document.querySelector("#level").value;
-if(type==="car"){
-for(let n=0;n<level;n++)brick(0,n*.8,0,6,2,"red");
-brick(-2,-.8,-1,1,1,"black");brick(2,-.8,-1,1,1,"black");
-brick(-2,-.8,1,1,1,"black");brick(2,-.8,1,1,1,"black");
-brick(0,level*.8,0,2,2,"blue");
+root.clear();
+pieces=0;
+const type=$("model").value;
+const level=Number($("level").value);
+if(type==="car")car(level);
+if(type==="house")house(level);
+if(type==="robot")robot(level);
+$("parts").textContent=pieces+" visuella komponenter i modellen.";
+controls.target.set(0,2,0);
+camera.position.set(10,8,12);
+controls.update();
 }
-if(type==="house"){
-for(let n=0;n<level+1;n++)brick(0,n*.8,0,4,4,"blue");
-brick(0,(level+1)*.8,0,4,4,"red");
-brick(0,(level+2)*.8,0,2,2,"red");
-}
-if(type==="robot"){
-for(let n=0;n<level+1;n++)brick(0,n*.8,0,4,2,"blue");
-brick(0,(level+1)*.8,0,2,2,"yellow");
-brick(-1,-.8,0,1,1,"black");brick(1,-.8,0,1,1,"black");
-}
-document.querySelector("#parts").innerHTML=`<li>${count} förenklade byggklossar</li><li>Modell: ${type}</li><li>Nivå: ${level}</li>`;
-updateMissing();
-}
-function updateMissing(){
-const owned=Math.max(0,+document.querySelector("#owned").value||0);
-document.querySelector("#missing").textContent=`Du saknar cirka ${Math.max(0,count-owned)} klossar i denna demo.`;
-}
-document.querySelector("#model").onchange=build;
-document.querySelector("#level").onchange=build;
-document.querySelector("#owned").oninput=updateMissing;
+$("model").onchange=build;
+$("level").onchange=build;
 const key="bricksnap-favorites";
 function favorites(){
-document.querySelector("#favorites").innerHTML=(JSON.parse(localStorage.getItem(key)||"[]")).map(x=>`<li>${x}</li>`).join("");
+let list=[];
+try{list=JSON.parse(localStorage.getItem(key)||"[]")}catch{}
+$("favorites").replaceChildren(...list.map(name=>{
+const li=document.createElement("li");
+li.textContent=name;
+return li;
+}));
 }
-document.querySelector("#save").onclick=()=>{
-const name=document.querySelector("#model").selectedOptions[0].text;
-const items=JSON.parse(localStorage.getItem(key)||"[]");
-items.push(name);
-localStorage.setItem(key,JSON.stringify(items));
+$("save").onclick=()=>{
+let list=[];
+try{list=JSON.parse(localStorage.getItem(key)||"[]")}catch{}
+list.push($("model").selectedOptions[0].text+" – "+$("level").selectedOptions[0].text);
+localStorage.setItem(key,JSON.stringify(list));
 favorites();
 };
-document.querySelector("#photo").onchange=e=>{
+$("photo").onchange=e=>{
 const file=e.target.files[0];
 if(!file)return;
-const img=document.querySelector("#preview");
-img.src=URL.createObjectURL(file);img.style.display="block";
+$("preview").src=URL.createObjectURL(file);
+$("preview").style.display="block";
 };
 function resize(){
-const w=viewer.clientWidth,h=viewer.clientHeight;
-camera.aspect=w/h;camera.updateProjectionMatrix();
+const w=$("viewer").clientWidth;
+const h=$("viewer").clientHeight;
+camera.aspect=w/h;
+camera.updateProjectionMatrix();
 renderer.setSize(w,h);
 }
 window.addEventListener("resize",resize);
-resize();build();favorites();
-function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+resize();
+build();
+favorites();
+function animate(){
+requestAnimationFrame(animate);
+controls.update();
+renderer.render(scene,camera);
+}
 animate();
 </script>
 </body>
