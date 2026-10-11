@@ -4,95 +4,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BrickSnap 0.7</title>
+<title>BrickSnap 0.8</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#edf2f8;color:#14213c;font:16px system-ui,-apple-system,sans-serif}
 header{background:#14213c;color:white;text-align:center;padding:20px}
 h1{margin:0}
 main{max-width:700px;margin:auto;padding:14px}
-.card{background:white;border-radius:18px;padding:17px;margin:0 0 14px;box-shadow:0 3px 14px #17233b12}
+.card{background:white;border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 3px 14px #17233b12}
 button,select,input{font:inherit;padding:11px;border:1px solid #cbd4e2;border-radius:10px}
 button{background:#ffd13d;border:0;font-weight:700;cursor:pointer}
 button:disabled{opacity:.4}
 select{width:100%;margin:8px 0 12px}
-#viewer{height:340px;background:#e1ebfa;border-radius:12px;overflow:hidden;touch-action:none}
+#viewer{height:350px;background:#e1ebfa;border-radius:12px;overflow:hidden;touch-action:none}
 #viewer canvas{display:block}
-#preview{display:none;max-width:100%;max-height:280px;border-radius:12px;margin-top:10px}
+#preview{display:none;width:100%;max-height:270px;object-fit:contain;border-radius:12px;margin-top:10px}
 small,.muted{color:#66738a}
 .buttons{display:flex;flex-wrap:wrap;gap:8px}
 .buttons button{flex:1}
-li{margin:6px 0}
-.step{font-weight:700;font-size:18px}
-.warning{background:#fff5d6;border-radius:10px;padding:10px}
+.note{background:#fff4d4;padding:11px;border-radius:10px}
 label{display:block;margin:8px 0 4px}
+li{margin:5px 0}
 </style>
 <script type="importmap">
-{"imports":{
-"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
-"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
-}}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}
 </script>
 </head>
 <body>
 <header>
 <h1>🧱 BrickSnap</h1>
-<div>Imagine it. Build it. · v0.7</div>
+<div>Imagine it. Build it. · v0.8</div>
 </header>
 <main>
+
 <section class="card">
-<h2>📸 Fotografera något</h2>
-<p>Ta ett foto eller välj en bild. Den sparas inte på någon server.</p>
-<label>Öppna kameran
-<input type="file" id="camera" accept="image/*" capture="environment">
-</label>
-<label>Välj befintligt foto
-<input type="file" id="gallery" accept="image/*">
-</label>
+<h2>📸 Foto till byggförslag</h2>
+<p>Ta ett foto eller välj en bild på mobilen.</p>
+<label>📷 Ta foto <input type="file" id="camera" accept="image/*" capture="environment"></label>
+<label>🖼️ Välj bild <input type="file" id="gallery" accept="image/*"></label>
 <img id="preview" alt="Ditt foto">
-<p id="photoStatus" class="muted">Inget foto valt.</p>
-<p class="warning">Fotot är än så länge en referens. BrickSnap kan ännu inte analysera bilden och skapa ett eget byggbart LEGO-set automatiskt.</p>
-</section>
-<section class="card">
-<h2>🏗️ Välj en byggmodell</h2>
-<select id="model">
-<option value="guide">🧱 Minibil – med byggguide</option>
-<option value="bmw">🏎️ Oscars BMW – 3D-koncept</option>
-<option value="car">🚗 Sportbil – 3D-koncept</option>
-<option value="house">🏠 Hus – 3D-koncept</option>
-<option value="robot">🤖 Robot – 3D-koncept</option>
+<p id="photoStatus" class="muted">Inget foto valt ännu.</p>
+<label>Vad föreställer fotot?</label>
+<select id="subject">
+<option value="car">🚗 Bil</option>
+<option value="house">🏠 Hus</option>
+<option value="robot">🤖 Robot eller figur</option>
 </select>
-<label>Detaljnivå (3D-koncepten)</label>
-<select id="level">
-<option value="1">Easy</option>
-<option value="2" selected>Medium</option>
-<option value="3">Expert</option>
+<button id="create">✨ Skapa byggförslag</button>
+<p class="note">BrickSnap känner ännu inte automatiskt igen föremål. Du väljer typen, och appen skapar en förenklad modell i en färg hämtad från bilden. Konstruktionen är inte verifierad med riktiga LEGO-bitar.</p>
+</section>
+
+<section class="card">
+<h2>🏗️ 3D-modell</h2>
+<label>Välj modell</label>
+<select id="model">
+<option value="guideCar">🧱 Minibil – med byggguide</option>
+<option value="guideHouse">🏠 Minihus – med byggguide</option>
+<option value="guideRobot">🤖 Minirobot – med byggguide</option>
+<option value="bmw">🏎️ Oscars BMW – 3D-koncept</option>
 </select>
 <div id="viewer"></div>
-<p><small>Dra för att rotera. Nyp för att zooma.</small></p>
+<p><small>Dra för att snurra. Nyp för att zooma.</small></p>
 <div class="buttons">
 <button id="reset">↺ Återställ vy</button>
 <button id="save">❤️ Spara favorit</button>
 </div>
 </section>
+
 <section class="card">
 <h2>📖 Bygginstruktioner</h2>
-<div id="guide">
-<p class="step" id="stepTitle"></p>
+<p id="stepTitle"><b>Steg 1</b></p>
 <p id="stepDesc"></p>
 <p id="stepPieces"></p>
 <div class="buttons">
 <button id="prev">← Föregående</button>
 <button id="next">Nästa →</button>
 </div>
-<p><small>Byggguiden visar en enkel digital minibil med en intern komponentlista. Den är inte verifierad mot LEGO:s reservdelskatalog eller testbyggd fysiskt.</small></p>
-</div>
-<p id="conceptNote" class="muted" hidden>Den här modellen är ett visuellt koncept och har ännu ingen verifierad byggguide. Välj ”Minibil – med byggguide” för att testa byggläget.</p>
+<p class="muted" id="guideNote">Exempelguide, inte fysiskt testbyggd.</p>
 </section>
+
 <section class="card">
 <h2>🧱 Dellista</h2>
-<div id="parts"></div>
+<ul id="parts"></ul>
+<p class="muted">Delförslagen är pedagogiska exempel, inte verifierade LEGO-artikelnummer.</p>
 </section>
+
 <section class="card">
 <h2>⭐ Mina favoriter</h2>
 <ul id="favorites"></ul>
@@ -108,447 +104,402 @@ const $=id=>document.getElementById(id);
 const scene=new T.Scene();
 scene.background=new T.Color(0xe1ebfa);
 const camera=new T.PerspectiveCamera(43,1,.1,100);
-camera.position.set(11,8,13);
-
+camera.position.set(9,7,12);
 const renderer=new T.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 $('viewer').appendChild(renderer.domElement);
 
-scene.add(new T.HemisphereLight(0xffffff,0x8192a8,2.8));
-const sun=new T.DirectionalLight(0xffffff,2.8);
+scene.add(new T.HemisphereLight(0xffffff,0x8496ae,2.8));
+const sun=new T.DirectionalLight(0xffffff,2.5);
 sun.position.set(5,12,7);
 scene.add(sun);
 
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;
-controls.target.set(0,1.5,0);
-
 const root=new T.Group();
 scene.add(root);
 
-const C={
-body:0x444950,
-bodylight:0x60666c,
-black:0x1c2229,
-glass:0x7d9da8,
-silver:0xc4cbd2,
-light:0xf5f7ed,
-red:0xc83439,
-blue:0x3986d4,
-yellow:0xffcc36,
-white:0xfafafa,
-green:0x47b579,
-brown:0x95643e
+let chosenColor=0x3184d3,stepIndex=0,photoURL=null;
+
+const colors={
+blue:0x3184d3,black:0x20252b,silver:0xbcc5cf,
+glass:0x88b8cb,red:0xce3838,white:0xf2f2eb,
+brown:0x97623e,green:0x43ad71,body:0x454a51
 };
 
-let visualCount=0;
-
-function mat(c,metal=0){
+function material(color,metal=0){
 return new T.MeshStandardMaterial({
-color:C[c],
+color:color==='custom'?chosenColor:colors[color],
+roughness:metal?.36:.55,
 metalness:metal,
-roughness:metal?.35:.57,
-transparent:c==='glass',
-opacity:c==='glass'?.84:1
+transparent:color==='glass',
+opacity:color==='glass'?.86:1
 });
 }
-
-function mesh(geo,x,y,z,c,metal=0){
-const m=new T.Mesh(geo,mat(c,metal));
+function add(geo,x,y,z,color,metal=0){
+const m=new T.Mesh(geo,material(color,metal));
 m.position.set(x,y,z);
 root.add(m);
-visualCount++;
 return m;
 }
-
-function box(x,y,z,w,h,d,c,metal=0){
-return mesh(new T.BoxGeometry(w,h,d),x,y,z,c,metal);
+function box(x,y,z,w,h,d,c){
+return add(new T.BoxGeometry(w,h,d),x,y,z,c);
 }
-
-function rounded(x,y,z,w,h,d,r,c,metal=.2){
-return mesh(
-new RoundedBoxGeometry(
-w,h,d,4,
-Math.max(.005,Math.min(r,w/2-.006,h/2-.006,d/2-.006))
-),
-x,y,z,c,metal
-);
+function round(x,y,z,w,h,d,r,c,metal=.2){
+return add(new RoundedBoxGeometry(
+w,h,d,4,Math.max(.005,Math.min(r,w/2-.01,h/2-.01,d/2-.01))
+),x,y,z,c,metal);
 }
-
 function cyl(x,y,z,r,h,c,axis='y'){
-const m=mesh(
-new T.CylinderGeometry(r,r,h,24),
-x,y,z,c,c==='silver'?.7:0
-);
+const m=add(new T.CylinderGeometry(r,r,h,28),x,y,z,c,c==='silver'?.7:0);
 if(axis==='z')m.rotation.x=Math.PI/2;
-if(axis==='x')m.rotation.z=Math.PI/2;
 return m;
 }
-
-function brick(x,y,z,w,d,c){
-box(x,y,z,w,.5,d,c);
-for(let i=0;i<w;i++){
-for(let j=0;j<d;j++){
-cyl(x-w/2+i+.5,y+.32,z-d/2+j+.5,.27,.12,c);
-}
-}
-}
-
-function wheels(L){
-for(const x of [-L/2+1.4,L/2-1.4]){
-for(const z of [-2.05,2.05]){
-cyl(x,.8,z,.72,.4,'black','z');
-cyl(x,.8,z+(z>0?.22:-.22),.38,.07,'silver','z');
-}
+function wheels(){
+for(const x of [-1.65,1.65])
+for(const z of [-1.16,1.16]){
+cyl(x,.5,z,.53,.32,'black','z');
+cyl(x,.5,z+(z>0?.19:-.19),.26,.04,'silver','z');
 }
 }
 
-function bmw(level){
-const L=11.2;
-rounded(0,1.12,0,L,.86,3.55,.32,'body',.52);
-rounded(2.9,1.52,0,4.95,.48,3.42,.20,'body',.54);
-rounded(-3.86,1.52,0,3.18,.5,3.42,.22,'body',.54);
-
-const hood=rounded(3.22,1.76,0,4.25,.21,3.28,.10,'bodylight',.55);
-hood.rotation.z=-.028;
-
-rounded(-1.15,2.51,0,4.55,.28,2.93,.13,'body',.52);
-
-const f=rounded(1.15,2.13,0,.13,.71,2.84,.045,'glass');
-f.rotation.z=.50;
-const r=rounded(-3.8,2.12,0,.12,.65,2.82,.045,'glass');
-r.rotation.z=-.67;
-
-for(const side of [-1,1]){
-rounded(-1.25,2.18,side*1.54,4.35,.53,.09,.04,'glass');
-
-for(const x of [-2.5,-.45]){
-rounded(x,2.2,side*1.62,.075,.62,.1,.025,'black');
+const guides={
+guideCar:[
+{
+title:'Botten',
+desc:'Lägg en blå (eller fotofärgad) platta 2×6.',
+parts:[['Platta 2×6',1]],
+draw:()=>box(0,.52,0,6,.22,2,'custom')
+},
+{
+title:'Hjul',
+desc:'Sätt fast fyra hjul och hjulnav. Kontrollera att hjulen kan snurra.',
+parts:[['Hjul',4],['Hjulnav',4]],
+draw:wheels
+},
+{
+title:'Kaross',
+desc:'Placera två 2×2-klossar fram och bak.',
+parts:[['Kloss 2×2',2]],
+draw:()=>{
+box(-1.8,.9,0,2,.55,2,'custom');
+box(1.8,.9,0,2,.55,2,'custom');
 }
-
-for(const x of [-2.85,-.32]){
-rounded(x,1.72,side*1.83,.47,.065,.065,.023,'silver',.75);
+},
+{
+title:'Vindruta',
+desc:'Sätt den genomskinliga delen i mitten.',
+parts:[['Genomskinlig del 2×2',1]],
+draw:()=>box(0,1.04,0,2,.6,2,'glass')
+},
+{
+title:'Tak',
+desc:'Sätt takplattan över rutan.',
+parts:[['Platta 2×2',1]],
+draw:()=>box(0,1.45,0,2,.2,2,'custom')
 }
-
-rounded(1.3,2,side*1.9,.56,.23,.34,.11,'body',.5);
-rounded(-.6,.88,side*1.75,6.5,.17,.12,.05,'black');
+],
+guideHouse:[
+{
+title:'Grund',
+desc:'Lägg en grundplatta 6×6.',
+parts:[['Platta 6×6',1]],
+draw:()=>box(0,.3,0,6,.22,6,'green')
+},
+{
+title:'Väggar',
+desc:'Bygg fyra väggar med plats för dörr.',
+parts:[['Kloss 2×4',8]],
+draw:()=>{
+box(0,1,2.3,5,.9,.5,'custom');
+box(0,1,-2.3,5,.9,.5,'custom');
+box(-2.3,1,0,.5,.9,4.6,'custom');
+box(2.3,1,0,.5,.9,4.6,'custom');
 }
+},
+{
+title:'Dörr och fönster',
+desc:'Sätt dit dörr och två fönster.',
+parts:[['Dörr',1],['Fönster',2]],
+draw:()=>{
+box(0,.95,2.61,1,1.2,.12,'brown');
+box(-1.55,1.05,2.62,.8,.65,.12,'glass');
+box(1.55,1.05,2.62,.8,.65,.12,'glass');
+}
+},
+{
+title:'Tak',
+desc:'Avsluta med två takdelar.',
+parts:[['Takdel',2]],
+draw:()=>{
+const a=box(-1.1,2.05,0,3,.28,6,'red');
+a.rotation.z=.35;
+const b=box(1.1,2.05,0,3,.28,6,'red');
+b.rotation.z=-.35;
+}
+}
+],
+guideRobot:[
+{
+title:'Fötter',
+desc:'Placera två breda fötter.',
+parts:[['Platta 2×2',2]],
+draw:()=>{
+box(-.85,.3,0,1.6,.25,1.8,'black');
+box(.85,.3,0,1.6,.25,1.8,'black');
+}
+},
+{
+title:'Ben',
+desc:'Bygg två ben.',
+parts:[['Kloss 1×2',4]],
+draw:()=>{
+box(-.85,.85,0,.9,1,.9,'custom');
+box(.85,.85,0,.9,1,.9,'custom');
+}
+},
+{
+title:'Kropp',
+desc:'Sätt en bred kropp ovanpå benen.',
+parts:[['Kloss 2×4',2]],
+draw:()=>box(0,1.75,0,3.3,1.1,1.7,'custom')
+},
+{
+title:'Armar',
+desc:'Sätt en arm på varje sida.',
+parts:[['Kloss 1×2',2]],
+draw:()=>{
+box(-2.15,1.7,0,.85,1.5,.9,'custom');
+box(2.15,1.7,0,.85,1.5,.9,'custom');
+}
+},
+{
+title:'Huvud',
+desc:'Bygg huvudet och sätt dit ögon.',
+parts:[['Kloss 2×2',1],['Ögondetalj',2]],
+draw:()=>{
+box(0,2.9,0,1.9,1.15,1.6,'custom');
+box(-.45,3.05,.86,.3,.3,.09,'black');
+box(.45,3.05,.86,.3,.3,.09,'black');
+}
+}
+]
+};
 
-for(const x of [-3.55,3.15]){
-for(const side of [-1,1]){
-const z=side*1.91;
-cyl(x,.8,z,.85,.50,'black','z');
-cyl(x,.8,z+side*.27,.64,.09,'silver','z');
-cyl(x,.8,z+side*.33,.53,.10,'black','z');
+function bmw(){
+round(0,1.05,0,11.1,.8,3.5,.3,'body',.5);
+round(2.8,1.48,0,5,.45,3.35,.18,'body',.5);
+round(-3.8,1.48,0,3.1,.45,3.35,.18,'body',.5);
+round(3.1,1.75,0,4.2,.18,3.25,.08,'body',.6);
+round(-1.2,2.48,0,4.6,.26,2.9,.12,'body',.5);
 
+let f=round(1.05,2.08,0,.13,.75,2.8,.04,'glass');
+f.rotation.z=.5;
+let r=round(-3.75,2.08,0,.13,.7,2.8,.04,'glass');
+r.rotation.z=-.6;
+
+for(const s of [-1,1]){
+round(-1.2,2.12,s*1.52,4.25,.53,.08,.03,'glass');
+for(const x of [-2.5,-.45])
+round(x,2.13,s*1.6,.07,.6,.08,.02,'black');
+for(const x of [-2.85,-.35])
+round(x,1.69,s*1.82,.45,.07,.06,.02,'silver');
+round(1.25,1.95,s*1.88,.5,.22,.32,.1,'body');
+
+for(const x of [-3.5,3.12]){
+const z=s*1.9;
+cyl(x,.78,z,.83,.48,'black','z');
+cyl(x,.78,z+s*.26,.59,.07,'silver','z');
 for(let i=0;i<5;i++){
 const a=i*Math.PI*2/5;
-const s=rounded(
-x+Math.cos(a)*.32,
-.8+Math.sin(a)*.32,
-z+side*.405,
-.16,.53,.055,.025,'silver',.78
+const spoke=round(
+x+Math.cos(a)*.3,
+.78+Math.sin(a)*.3,
+z+s*.35,.13,.48,.05,.02,'silver'
 );
-s.rotation.z=a-Math.PI/2;
-}
-
-cyl(x,.8,z+side*.43,.13,.07,'silver','z');
-
-for(let k=0;k<=10;k++){
-const t=Math.PI*.12+k*Math.PI*.76/10;
-rounded(
-x+.98*Math.cos(t),
-.8+.98*Math.sin(t),
-side*1.82,
-.20,.11,.10,.04,'bodylight',.52
-);
+spoke.rotation.z=a-Math.PI/2;
 }
 }
 }
 
 for(const z of [-.45,.45]){
-rounded(5.66,1.42,z,.13,.53,.7,.11,'silver',.8);
-rounded(5.75,1.42,z,.08,.42,.57,.09,'black');
+round(5.62,1.4,z,.13,.5,.68,.1,'silver');
+round(5.7,1.4,z,.07,.4,.54,.07,'black');
+}
+for(const z of [-1.3,1.3]){
+round(5.55,1.68,z,.13,.16,.72,.05,'white');
+round(-5.55,1.5,z,.13,.19,.7,.05,'red');
+}
+round(5.6,1,0,.14,.19,2.6,.06,'black');
 }
 
-for(const z of [-1.31,1.31]){
-rounded(5.55,1.72,z,.13,.18,.72,.07,'light');
-rounded(-5.53,1.54,z,.13,.20,.7,.065,'red');
-}
-
-rounded(5.6,1.01,0,.16,.19,2.62,.07,'black');
-
-if(level>1){
-rounded(-5.52,1.03,0,.12,.22,2.65,.06,'black');
-}
-
-if(level===3){
-for(const z of [-1.6,1.6]){
-rounded(0,.94,z,5,.06,.06,.02,'silver');
-}
-}
-}
-
-function car(level){
-const L=level===1?6:level===2?8:10;
-brick(0,1.3,0,L,4,'red');
-brick(-.5,1.9,0,4,4,'glass');
-brick(-.5,2.5,0,3,4,'red');
-wheels(L);
-}
-
-function house(level){
-box(0,.1,0,10,.2,9,'green');
-for(let n=0;n<=level;n++){
-brick(0,.7+n*.55,0,6,5,'white');
-}
-const y=1.3+level*.55;
-brick(0,y,0,7,6,'red');
-brick(0,y+.6,0,5,4,'red');
-box(0,1,2.6,1.3,1.5,.12,'brown');
-for(const x of [-2,2]){
-box(x,1.3,2.6,1,.9,.13,'glass');
-}
-}
-
-function robot(level){
-for(let n=0;n<=level;n++){
-brick(0,1.2+n*.55,0,4,3,n%2?'blue':'red');
-}
-const y=1.9+level*.55;
-brick(0,y,0,3,3,'yellow');
-for(const x of [-.7,.7]){
-box(x,y,1.56,.45,.35,.1,'black');
-}
-box(0,y-.4,1.56,1.4,.13,.1,'black');
-for(const x of [-2.7,2.7]){
-box(x,.45,0,1.1,.9,1.4,'black');
-}
-}
-
-const steps=[
-{
-title:'Bygg botten',
-desc:'Lägg den blå 2×6-plattan vågrätt.',
-items:[['Blå platta 2×6',1]],
-draw:()=>box(0,.45,0,6,.24,2,'blue')
-},
-{
-title:'Sätt fast hjulen',
-desc:'Fäst två hjulpar på varsin sida av botten.',
-items:[['Svart hjul',4],['Grå hjulnav',4]],
-draw:()=>{
-for(const x of [-1.8,1.8]){
-for(const z of [-1.25,1.25]){
-cyl(x,.45,z,.52,.35,'black','z');
-cyl(x,.45,z+(z>0?.2:-.2),.26,.06,'silver','z');
-}
-}
-}
-},
-{
-title:'Bygg karossen',
-desc:'Placera två blå 2×2-klossar ovanpå botten, en fram och en bak.',
-items:[['Blå kloss 2×2',2]],
-draw:()=>{
-box(-1.8,.88,0,2,.65,2,'blue');
-box(1.8,.88,0,2,.65,2,'blue');
-}
-},
-{
-title:'Gör vindrutan',
-desc:'Placera en genomskinlig 2×2-del mitt på bilen.',
-items:[['Genomskinlig kloss 2×2',1]],
-draw:()=>box(0,1.02,0,2,.55,2,'glass')
-},
-{
-title:'Avsluta med taket',
-desc:'Sätt en blå 2×2-platta ovanpå den genomskinliga delen.',
-items:[['Blå platta 2×2',1]],
-draw:()=>box(0,1.38,0,2,.22,2,'blue')
-}
-];
-
-let stepIndex=0;
-
-function guideModel(){
-for(let i=0;i<=stepIndex;i++){
-steps[i].draw();
-}
-}
-
-function reset(){
-camera.position.set(11,8,13);
-controls.target.set(0,1.5,0);
-controls.update();
-}
-
-function build(){
-while(root.children.length){
-const obj=root.children[0];
+function clear(){
+for(const obj of [...root.children]){
 root.remove(obj);
-obj.geometry?.dispose();
-if(obj.material){
-if(Array.isArray(obj.material)){
-obj.material.forEach(m=>m.dispose());
-}else{
+obj.geometry.dispose();
 obj.material.dispose();
 }
 }
+function reset(){
+camera.position.set(9,7,12);
+controls.target.set(0,1.5,0);
+controls.update();
 }
+function renderModel(){
+clear();
+const name=$('model').value;
+const steps=guides[name];
 
-visualCount=0;
-const type=$('model').value;
-const level=+$('level').value;
-
-if(type==='guide'){
-guideModel();
-}else{
-({bmw,car,house,robot})[type](level);
-}
-
-const isGuide=type==='guide';
-$('guide').hidden=!isGuide;
-$('conceptNote').hidden=isGuide;
-
-if(isGuide){
-$('stepTitle').textContent=
-`Steg ${stepIndex+1} av ${steps.length}: ${steps[stepIndex].title}`;
-$('stepDesc').textContent=steps[stepIndex].desc;
-$('stepPieces').textContent=
-'Nya delar: '+steps[stepIndex].items.map(
-([name,n])=>`${n} × ${name}`
-).join(', ');
-
+if(steps){
+for(let i=0;i<=stepIndex;i++)steps[i].draw();
+const step=steps[stepIndex];
+$('stepTitle').textContent=`Steg ${stepIndex+1} av ${steps.length}: ${step.title}`;
+$('stepDesc').textContent=step.desc;
+$('stepPieces').textContent='Nya delar: '+step.parts.map(([n,q])=>`${q} × ${n}`).join(', ');
 $('prev').disabled=stepIndex===0;
 $('next').disabled=stepIndex===steps.length-1;
+$('guideNote').textContent='Exempelguide. Inte fysiskt testbyggd eller verifierad mot LEGO:s sortiment.';
 
-const total={};
-steps.forEach(s=>s.items.forEach(([name,n])=>{
-total[name]=(total[name]||0)+n;
-}));
+const counts={};
+for(const s of steps)
+for(const [n,q] of s.parts)
+counts[n]=(counts[n]||0)+q;
 
-$('parts').replaceChildren();
-const ul=document.createElement('ul');
-
-Object.entries(total).forEach(([name,n])=>{
+$('parts').replaceChildren(...Object.entries(counts).map(([n,q])=>{
 const li=document.createElement('li');
-li.textContent=`${n} × ${name}`;
-ul.appendChild(li);
-});
-
-$('parts').appendChild(ul);
-
-const p=document.createElement('p');
-p.className='muted';
-p.textContent=
-'Totalt '+Object.values(total).reduce((a,b)=>a+b,0)+
-' delar enligt den digitala minibilens exempelguide. Mått och fästen är inte fysiskt verifierade.';
-$('parts').appendChild(p);
+li.textContent=`${q} × ${n}`;
+return li;
+}));
 }else{
-$('parts').textContent=
-`${visualCount} visuella 3D-komponenter. Ingen verifierad LEGO-dellista finns för denna modell.`;
+bmw();
+$('stepTitle').textContent='Oscars BMW – 3D-koncept';
+$('stepDesc').textContent='Den här rundade BMW-modellen har ännu ingen verifierad byggguide.';
+$('stepPieces').textContent='';
+$('prev').disabled=true;
+$('next').disabled=true;
+$('parts').replaceChildren();
+$('guideNote').textContent='Välj en minibil, ett minihus eller en minirobot för att se byggsteg.';
 }
-
 reset();
 }
 
+$('model').onchange=()=>{
+stepIndex=0;
+renderModel();
+};
 $('prev').onclick=()=>{
 if(stepIndex>0){
 stepIndex--;
-build();
+renderModel();
 }
 };
-
 $('next').onclick=()=>{
-if(stepIndex<steps.length-1){
+if(stepIndex<guides[$('model').value]?.length-1){
 stepIndex++;
-build();
+renderModel();
 }
 };
-
-$('model').onchange=()=>{
-stepIndex=0;
-build();
-};
-
-$('level').onchange=build;
 $('reset').onclick=reset;
-
-const key='bricksnap-favorites';
 
 function favorites(){
 let items=[];
 try{
-items=JSON.parse(localStorage.getItem(key)||'[]');
+items=JSON.parse(localStorage.getItem('bricksnap-favorites')||'[]');
 }catch{}
-
 $('favorites').replaceChildren(...items.map(s=>{
 const li=document.createElement('li');
 li.textContent=s;
 return li;
 }));
 }
-
 $('save').onclick=()=>{
 let items=[];
 try{
-items=JSON.parse(localStorage.getItem(key)||'[]');
+items=JSON.parse(localStorage.getItem('bricksnap-favorites')||'[]');
 }catch{}
-
-items.push(
-$('model').selectedOptions[0].text+
-' – '+$('level').selectedOptions[0].text
-);
-
+items.push($('model').selectedOptions[0].text);
 try{
-localStorage.setItem(key,JSON.stringify(items));
+localStorage.setItem('bricksnap-favorites',JSON.stringify(items));
 }catch{}
-
 favorites();
 };
 
-let previousURL;
-
-function showPhoto(e){
+let photoImage=null;
+async function loadPhoto(e){
 const file=e.target.files?.[0];
 if(!file)return;
-
-if(previousURL){
-URL.revokeObjectURL(previousURL);
-}
-
-previousURL=URL.createObjectURL(file);
-$('preview').src=previousURL;
+if(photoURL)URL.revokeObjectURL(photoURL);
+photoURL=URL.createObjectURL(file);
+$('preview').src=photoURL;
 $('preview').style.display='block';
-$('photoStatus').textContent=
-'Foto valt: '+file.name+
-'. Välj en byggmodell nedan för att prova byggguiden.';
+$('photoStatus').textContent='Foto valt: '+file.name;
+const img=new Image();
+img.onload=()=>{
+photoImage=img;
+};
+img.src=photoURL;
+}
+$('camera').onchange=loadPhoto;
+$('gallery').onchange=loadPhoto;
+
+function sampleColor(img){
+const canvas=document.createElement('canvas');
+canvas.width=64;
+canvas.height=64;
+const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ctx.drawImage(img,0,0,64,64);
+const d=ctx.getImageData(0,0,64,64).data;
+let rr=0,gg=0,bb=0,n=0;
+for(let y=16;y<48;y+=2)
+for(let x=16;x<48;x+=2){
+const i=(y*64+x)*4;
+const r=d[i],g=d[i+1],b=d[i+2];
+if(Math.max(r,g,b)>245&&Math.min(r,g,b)>240)continue;
+rr+=r;
+gg+=g;
+bb+=b;
+n++;
+}
+return n?(
+(Math.round(rr/n)<<16)|
+(Math.round(gg/n)<<8)|
+Math.round(bb/n)
+):0x3184d3;
 }
 
-$('camera').onchange=showPhoto;
-$('gallery').onchange=showPhoto;
+$('create').onclick=()=>{
+if(!photoImage){
+$('photoStatus').textContent='Ta eller välj först ett foto.';
+return;
+}
+chosenColor=sampleColor(photoImage);
+$('model').value={
+car:'guideCar',
+house:'guideHouse',
+robot:'guideRobot'
+}[$('subject').value];
+stepIndex=0;
+renderModel();
+$('photoStatus').textContent='Klart! Ett förenklat byggförslag har skapats utifrån din valda kategori och en färg från fotot. Scrolla ned för att se det.';
+};
 
 function resize(){
-const w=$('viewer').clientWidth;
-const h=$('viewer').clientHeight;
+const w=$('viewer').clientWidth,h=$('viewer').clientHeight;
 camera.aspect=w/h;
 camera.updateProjectionMatrix();
 renderer.setSize(w,h);
 }
-
 window.addEventListener('resize',resize);
 resize();
-build();
+renderModel();
 favorites();
 
-function tick(){
-requestAnimationFrame(tick);
+function animate(){
+requestAnimationFrame(animate);
 controls.update();
 renderer.render(scene,camera);
 }
-
-tick();
+animate();
 </script>
 </body>
 </html>
